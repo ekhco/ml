@@ -1,0 +1,65 @@
+---
+title: 'The Quantified Self Movement: Predicting Poor Exercise Form'
+author: "Eric Chow"
+date: "Jun 29, 2017"
+output:
+  pdf_document: default
+  html_document:
+    keep_md: yes
+---
+
+## Synopsis
+People regularly quantify how much of an activity they perform, but they do not quantify how well they perform them. In this analysis, we look at data from belt, forearm, arm, and dumbell accelerometers to predict whether they perform the activity correctly or not in 5 different ways. The data is available from (here) [http://groupware.les.inf.puc-rio.br/har]
+
+```{r setwd, echo=TRUE, results="hide"}
+rm(list=ls())
+library(caret)
+setwd("~/Dropbox/coursera/machine_learning/ml")
+quiz <- read.csv("pml-testing.csv")
+data <- read.csv("pml-training.csv")
+```
+
+## Data PreProcessing
+I drop any columns with NA or NUM/0! manually. I also use centering and scaling for preprocessing as the medians and variances are quite heterogeneous across the measures. I use the caret package to do this.
+
+``` {r prep, echo=TRUE, results="hide"}
+
+# drop funny columns (NA, or #DIV/0!)
+data_ <- data[,!sapply(data,function(x) any(is.na(x)))]
+data__ <- data_[,!sapply(data_,function(x) any(x=="#DIV/0!"))]
+
+```
+
+## Subsetting Data
+First, I split the training file into a training (75%) and testing (25%) set because the test file is actually for the quiz (validation).
+``` {r subs, echo=TRUE, results="hide"}
+in_train <- createDataPartition(y=data__$classe, p=0.75, list=FALSE)
+trn <- data__[in_train, ]
+tst <- data__[-in_train, ]
+
+```
+
+## Random Forest Prediction
+A random forest approach was used to predict the "classe."  It took a long time to run.
+
+```{r rf, echo=TRUE, cache=TRUE}
+
+modelFit <- train(classe ~ . , data=trn, preProcess=c("center","scale"), method = "rf")
+
+```
+
+## Prediction and Testing
+When we test the prediction against the 25% test set, we find that the accuracy is reasonable.
+```{r test, echo=TRUE}
+
+prd <- predict(modelFit, newdata=tst)
+# use confusion matrix to EVALUATE
+confusionMatrix(prd, tst$classe)
+
+
+```
+
+
+## Conclusions
+
+From our prediction analysis, we can see that random forest is a useful way to predict poor exercise form.
