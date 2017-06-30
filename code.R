@@ -20,11 +20,9 @@ tst <- data__[-in_train, ]
 
 
 
-
 # preprocess and train
-modelFit <- train(classe ~ . , data=trn, preProcess=c("center","scale"), method = "rf")
-
-
+modelFit <- train(classe ~ ., preProcess=c("center","scale"), data=trn, method = "gbm")
+saveRDS(modelFit, "gbm_fit.rds")
 
 
 # prediction
@@ -32,3 +30,11 @@ prd <- predict(modelFit, newdata=tst)
 prd
 # use confusion matrix to EVALUATE
 confusionMatrix(prd, tst$classe)
+
+
+
+# validation
+
+quiz_ <- quiz[,names(data__)[-60]]
+prd <- predict(modelFit, newdata=quiz_)
+prd
